@@ -3,22 +3,19 @@
 
 
 
-import gym, torch, numpy as np, torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
+import os
+
+import gym
 import tianshou as ts
-from copy import deepcopy
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from tianshou.env import DummyVectorEnv
 from torch.optim.lr_scheduler import LambdaLR
-import torch.nn.functional as F
-import os
-import time
-import json
-import math
-from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
+
 from env import MEC_Env
 from network import conv_mlp_net
-
-
 
 edge_num = 1
 expn = 'exp1'
@@ -201,9 +198,26 @@ for wi in range(100,0-1,-2):
     def save_best_fn (policy):
         pass
 
+
+    def ensure_dir(directory):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+    def save_model(model, directory, filename):
+        ensure_dir(directory)  # 确保目录存在
+        filepath = os.path.join(directory, filename)
+        torch.save(model.state_dict(), filepath)
+
     def test_fn(epoch, env_step):
-        policy.actor.save_model('save/pth-e%d/'%(edge_num) + expn + '/w%03d/ep%02d-actor.pth'%(wi,epoch))
-        policy.critic.save_model('save/pth-e%d/'%(edge_num) + expn + '/w%03d/ep%02d-critic.pth'%(wi,epoch))
+        # policy.actor.save_model('save/pth-e%d/'%(edge_num) + expn + '/w%03d/ep%02d-actor.pth'%(wi,epoch))
+        # policy.critic.save_model('save/pth-e%d/'%(edge_num) + expn + '/w%03d/ep%02d-critic.pth'%(wi,epoch))
+        actor_directory = 'save/pth-e{}/{}'.format(edge_num, expn) + '/w{:03d}'.format(wi)
+        actor_filename = 'ep{:02d}-actor.pth'.format(epoch)
+        save_model(policy.actor, actor_directory, actor_filename)
+
+        critic_directory = 'save/pth-e{}/{}'.format(edge_num, expn) + '/w{:03d}'.format(wi)
+        critic_filename = 'ep{:02d}-critic.pth'.format(epoch)
+        save_model(policy.critic, critic_directory, critic_filename)
 
     def train_fn(epoch, env_step):
         pass
